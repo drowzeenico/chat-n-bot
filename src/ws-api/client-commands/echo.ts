@@ -1,5 +1,6 @@
 import Joi from '@hapi/joi';
 import { BadRequestError } from '../../errors';
+import { Client } from '../connection';
 import { ICommand } from './router';
 
 export interface EchoPayload {
@@ -17,7 +18,7 @@ const commandValidationRule = Joi.object({
 export const EchoCommand: ICommand<EchoPayload, EchoResponse> = {
   name: 'echo',
 
-  async process(payload: EchoPayload): Promise<EchoResponse> {
+  async process(payload: EchoPayload, client: Client): Promise<EchoResponse> {
     const { error } = commandValidationRule.validate(payload);
     if (error) throw new BadRequestError(error.message, error);
 

@@ -1,5 +1,6 @@
 import Joi from '@hapi/joi';
 import { BadRequestError } from '../../errors';
+import { Client } from '../connection';
 import { ICommand } from './router';
 
 export interface PingPayload {
@@ -18,7 +19,7 @@ const commandValidationRule = Joi.object({
 export const PingCommand: ICommand<PingPayload, PingResponse> = {
   name: 'ping',
 
-  async process(payload: PingPayload): Promise<PingResponse> {
+  async process(payload: PingPayload, client: Client): Promise<PingResponse> {
     const { error } = commandValidationRule.validate(payload);
     if (error) throw new BadRequestError(error.message, error);
 

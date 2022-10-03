@@ -1,18 +1,17 @@
 import { IncomingMessage, Server } from 'http';
 import { Socket } from 'net';
 import { URL } from 'url';
-import * as uuid from 'uuid';
 
 import { Config } from '../common/config';
 import { Logger } from '../common/logger';
 import { wsServer } from './server';
-import { IConnection } from './connection';
+import { Client } from './connection';
 import { jwtUtils } from '../common/jwt';
 import { AccessDenied } from '../errors';
 
 const logger = Logger('WS-Server');
 
-interface IParsedRequest {
+export interface IParsedRequest {
   requestStartAt: number;
   verison: number;
   token?: string;
@@ -29,23 +28,17 @@ export class WssLauncher {
   }
 
   private async _upgrade(req: IncomingMessage, socket: Socket, head: Buffer) {
-    const connId = uuid.v4();
     const parsed = this._parseRequest(req, socket);
 
     this.wss.handleUpgrade(req, socket, head, _ws => {
-      const ws = _ws as IConnection;
-
-      if (!jwtUtils.verifyToken(parsed.token)) {
+      if (!jwtUtils.verifyToken(parsed.token ?? '')) {
         const errObject = new AccessDenied('User is not authorized');
         const err = this.wss.buildErrorResponse(errObject);
-        ws.send(JSON.stringify(err));
-        return ws.close(1002, errObject.message);
+        _ws.send(JSON.stringify(err));
+        return _ws.close(1002, errObject.message);
       }
 
-      ws.id = connId;
-      ws.ip = parsed.ip!;
-      ws.version = parsed.verison;
-      ws.token = parsed.token;
+      const ws = new Client(_ws, parsed);
       this.wss.emit('connection', ws, req);
     });
   }
