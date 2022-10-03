@@ -8,9 +8,7 @@ export const jwtUtils = {
     return jwt.sign(user, Config.JWT_SECRET_KEY);
   },
 
-  verifyToken(token?: string): boolean {
-    if (!token) return false;
-
+  verifyToken(token: string): boolean {
     try {
       const verified = jwt.verify(token, Config.JWT_SECRET_KEY);
       return verified ? true : false;

@@ -1,7 +1,7 @@
 import Joi from '@hapi/joi';
 import WebSocket, { ServerOptions } from 'ws';
 
-import { IConnection } from './connection';
+import { Client } from './connection';
 import { Logger } from '../common/logger';
 import { ResourceNotFound, UnsupportedCommandFormatError } from '../errors';
 import { IPayload, IResponse, Router } from './client-commands/router';
@@ -37,32 +37,34 @@ export class wsServer extends WebSocket.Server {
     }).required();
   }
 
-  onConnection(client: IConnection) {
-    logger.info(`connected id=${client.id}, readyState=${client.readyState}`);
+  onConnection(client: Client) {
+    const logInfo = `Connected id=${client.id}, readyState=${client.ws.readyState}`;
+    logger.info(logInfo);
+    client.connected(logInfo);
 
-    client.on('message', async data => {
+    client.ws.on('message', async data => {
       try {
         const command: IClientMessage = JSON.parse(data.toString());
         const validateError = this.validateCommand(command);
         if (validateError) {
           const err = this.buildErrorResponse(validateError, command);
-          return client.send(JSON.stringify(err));
+          return client.json(err);
         }
 
-        const result = await this.processMessage(command);
+        const result = await this.processMessage(command, client);
         if (result instanceof Error) {
           const err = this.buildErrorResponse(result, command);
-          return client.send(JSON.stringify(err));
+          return client.json(err);
         }
 
         const response = this.buildResponse(result, command);
-        client.send(JSON.stringify(response));
+        client.json(response);
       } catch (e) {
-        client.send(JSON.stringify(this.buildErrorResponse(e as Error)));
+        client.json(this.buildErrorResponse(e as Error));
       }
     });
 
-    client.on('close', (code, reason) => {
+    client.ws.on('close', (code, reason) => {
       logger.info('client disconnected', { code, reason });
     });
   }
@@ -79,10 +81,10 @@ export class wsServer extends WebSocket.Server {
     }
   }
 
-  async processMessage(command: IClientMessage): Promise<IResponse | Error> {
+  async processMessage(command: IClientMessage, client: Client): Promise<IResponse | Error> {
     try {
       const controller = Router.get(command.name)!;
-      return await controller(command);
+      return await controller(command, client);
     } catch (e) {
       return e as Error;
     }
