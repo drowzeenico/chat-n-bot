@@ -7,6 +7,8 @@ import { Config } from '../common/config';
 import { Logger } from '../common/logger';
 import { wsServer } from './server';
 import { IConnection } from './connection';
+import { jwtUtils } from '../common/jwt';
+import { AccessDenied } from '../errors';
 
 const logger = Logger('WS-Server');
 
@@ -32,6 +34,13 @@ export class WssLauncher {
 
     this.wss.handleUpgrade(req, socket, head, _ws => {
       const ws = _ws as IConnection;
+
+      if (!jwtUtils.verifyToken(parsed.token)) {
+        const errObject = new AccessDenied('User is not authorized');
+        const err = this.wss.buildErrorResponse(errObject);
+        ws.send(JSON.stringify(err));
+        return ws.close(1002, errObject.message);
+      }
 
       ws.id = connId;
       ws.ip = parsed.ip!;

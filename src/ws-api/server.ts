@@ -2,9 +2,8 @@ import Joi from '@hapi/joi';
 import WebSocket, { ServerOptions } from 'ws';
 
 import { IConnection } from './connection';
-import { jwtUtils } from '../common/jwt';
 import { Logger } from '../common/logger';
-import { AccessDenied, ResourceNotFound, UnsupportedCommandFormatError } from '../errors';
+import { ResourceNotFound, UnsupportedCommandFormatError } from '../errors';
 import { IPayload, IResponse, Router } from './client-commands/router';
 
 const logger = Logger('WebSocket-Server');
@@ -42,11 +41,6 @@ export class wsServer extends WebSocket.Server {
     logger.info(`connected id=${client.id}, readyState=${client.readyState}`);
 
     client.on('message', async data => {
-      if (!jwtUtils.verifyToken(client.token)) {
-        const err = this.buildErrorResponse(new AccessDenied('User is not authorized'));
-        return client.send(JSON.stringify(err));
-      }
-
       try {
         const command: IClientMessage = JSON.parse(data.toString());
         const validateError = this.validateCommand(command);
