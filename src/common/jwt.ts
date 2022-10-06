@@ -1,17 +1,19 @@
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 import { Config } from './config';
-import { IUser } from '../http-api/controller/user/auth';
+
+type JwtData = { userId: number };
+export type VerifiedToken = JwtPayload & JwtData;
 
 export const jwtUtils = {
-  generateToken(user: IUser): string {
+  generateToken(user: JwtData): string {
     return jwt.sign(user, Config.JWT_SECRET_KEY);
   },
 
-  verifyToken(token: string): boolean {
+  parseToken(token: string): boolean | VerifiedToken {
     try {
       const verified = jwt.verify(token, Config.JWT_SECRET_KEY);
-      return verified ? true : false;
+      return !verified ? false : (verified as VerifiedToken);
     } catch (error) {
       return false;
     }

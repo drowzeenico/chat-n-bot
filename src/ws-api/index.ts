@@ -6,8 +6,10 @@ import { Config } from '../common/config';
 import { Logger } from '../common/logger';
 import { wsServer } from './server';
 import { Client } from './connection';
-import { jwtUtils } from '../common/jwt';
-import { AccessDenied } from '../errors';
+import { jwtUtils, VerifiedToken } from '../common/jwt';
+import { AccessDenied, BaseError } from '../errors';
+import { WebSocket } from 'ws';
+import { UserService } from '../services/users';
 
 const logger = Logger('WS-Server');
 
@@ -30,17 +32,26 @@ export class WssLauncher {
   private async _upgrade(req: IncomingMessage, socket: Socket, head: Buffer) {
     const parsed = this._parseRequest(req, socket);
 
-    this.wss.handleUpgrade(req, socket, head, _ws => {
-      if (!jwtUtils.verifyToken(parsed.token ?? '')) {
-        const errObject = new AccessDenied('User is not authorized');
-        const err = this.wss.buildErrorResponse(errObject);
-        _ws.send(JSON.stringify(err));
-        return _ws.close(1002, errObject.message);
+    this.wss.handleUpgrade(req, socket, head, async _ws => {
+      const jwt = jwtUtils.parseToken(parsed.token ?? '');
+      if (!jwt) {
+        return this.sendError(new AccessDenied('Access denied: User is not authorized'), _ws);
       }
 
-      const ws = new Client(_ws, parsed);
+      const user = await UserService.getUserById((jwt as VerifiedToken).userId);
+      if (!user) {
+        return this.sendError(new AccessDenied('Access denied: User is not found'), _ws);
+      }
+
+      const ws = new Client(_ws, parsed, user);
       this.wss.emit('connection', ws, req);
     });
+  }
+
+  private sendError(err: BaseError, ws: WebSocket) {
+    const response = this.wss.buildErrorResponse(err);
+    ws.send(JSON.stringify(response));
+    return ws.close(1002, err.message);
   }
 
   private _parseRequest(req: IncomingMessage, socket: Socket): IParsedRequest {

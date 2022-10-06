@@ -77,7 +77,7 @@ export class BadRequestError extends BaseError {
   }
 }
 
-export class LogicError extends BaseError {
+export class AppError extends BaseError {
   constructor(message: string, payload?: Object) {
     super(message, payload);
     this.errorCode = ErrorCode.BUSINESS_LOGIC;

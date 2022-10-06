@@ -9,3 +9,4 @@ WSAPI=ws://localhost:9090/
 
 JWT_SECRET_KEY = jwt_secret_key
 TOKEN_HEADER_KEY = token_header_key
+SALT=some_password_salt

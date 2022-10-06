@@ -2,6 +2,7 @@ import * as uuid from 'uuid';
 
 import { WebSocket } from 'ws';
 import { IParsedRequest } from '.';
+import { User } from '../models/user';
 
 const IndexById = new Map<string, Client>();
 
@@ -20,12 +21,14 @@ export class Client {
   readonly ip: string;
   readonly version: number;
   readonly token: string;
+  readonly user: User;
 
-  constructor(readonly ws: WebSocket, parsed: IParsedRequest) {
+  constructor(readonly ws: WebSocket, parsed: IParsedRequest, user: User) {
     this.id = uuid.v4();
     this.ip = parsed.ip!;
     this.version = parsed.verison;
     this.token = parsed.token!;
+    this.user = user;
 
     IndexById.set(this.id, this);
   }

@@ -1,34 +1,32 @@
 import Joi from '@hapi/joi';
-import { BadRequestError, LogicError } from '../../../errors';
-import { IUser } from './auth';
+import { AppError, BadRequestError } from '../../../errors';
+import { UserDto } from '../../../models/user';
+import { UserService } from '../../../services/users';
 
-global.Users = new Set<IUser>();
-
-type UserCredentials = {
+export type RegistrationData = {
   login: string;
   password: string;
+  email: string;
 };
 
-export const UserRegisterController = async (credentials: UserCredentials): Promise<IUser> => {
+export const UserRegisterController = async (credentials: RegistrationData): Promise<UserDto> => {
   const validationRules = Joi.object({
     login: Joi.string().required(),
+    email: Joi.string().email().required(),
     password: Joi.string().required(),
   }).required();
 
   const { error } = validationRules.validate(credentials);
   if (error) throw new BadRequestError('Validation error:' + error.message);
 
-  const newUser = {
-    login: credentials.login,
-    password: credentials.password,
-  };
-
-  for (const u of global.Users) {
-    if (newUser.login === u.login && newUser.password === u.password) {
-      throw new LogicError('User already exists');
+  try {
+    const user = await UserService.save(credentials);
+    if (!user) {
+      throw new AppError('Error occured while registering new user');
     }
-  }
 
-  global.Users.add(newUser);
-  return newUser;
+    return user!.getDTO();
+  } catch (e) {
+    throw new AppError('Error occured while registering new user', { message: (e as Error).message });
+  }
 };
