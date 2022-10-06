@@ -7,7 +7,7 @@ export class usersInit1664987586516 implements MigrationInterface {
             "id" SERIAL NOT NULL,
             "login" citext NOT NULL,
             "email" citext NOT NULL,
-            "password" character varying,
+            "password" character varying NOT NULL,
             "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
             "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
             CONSTRAINT "Unique_Login" UNIQUE ("login"),
@@ -17,5 +17,7 @@ export class usersInit1664987586516 implements MigrationInterface {
     `);
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {}
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropTable('users');
+  }
 }

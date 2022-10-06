@@ -1,7 +1,7 @@
-import Joi from "@hapi/joi";
-import { config } from "dotenv";
-import dotenvParseVariables from "dotenv-parse-variables";
-import { ConfigError } from "../errors";
+import Joi from '@hapi/joi';
+import { config } from 'dotenv';
+import dotenvParseVariables from 'dotenv-parse-variables';
+import { ConfigError } from '../errors';
 
 export interface IConfig {
   ENV: string;
@@ -15,6 +15,7 @@ export interface IConfig {
   WSAPI: string;
   JWT_SECRET_KEY: string;
   TOKEN_HEADER_KEY: string;
+  SALT: string;
 }
 
 let env = config({ path: process.env.DOTENV_CONFIG_PATH });
@@ -23,7 +24,7 @@ if (env.error || !env.parsed) throw env.error;
 const parsed = dotenvParseVariables(env.parsed);
 
 const configSchema = Joi.object({
-  ENV: Joi.string().optional().default("dev"),
+  ENV: Joi.string().optional().default('dev'),
   PORT: Joi.number().required().default(9000),
   REDIS: Joi.string().uri().required(),
   DB: Joi.object({
@@ -34,6 +35,7 @@ const configSchema = Joi.object({
   WSAPI: Joi.string().uri().required(),
   JWT_SECRET_KEY: Joi.string().required(),
   TOKEN_HEADER_KEY: Joi.string().required(),
+  SALT: Joi.string(),
 }).required();
 
 const rawConfig: IConfig = {
@@ -48,6 +50,7 @@ const rawConfig: IConfig = {
   WSAPI: parsed.WSAPI as string,
   JWT_SECRET_KEY: parsed.JWT_SECRET_KEY as string,
   TOKEN_HEADER_KEY: parsed.TOKEN_HEADER_KEY as string,
+  SALT: parsed.SALT as string,
 };
 
 const { error, value } = configSchema.validate(rawConfig, {

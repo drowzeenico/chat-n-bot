@@ -4,16 +4,21 @@ import cors from 'cors';
 import UserRoutes from './routes/user';
 import { AccessDenied, BaseError, ResourceNotFound } from '../errors';
 import { Logger } from '../common/logger';
-import { jwtUtils } from '../common/jwt';
+import { jwtUtils, VerifiedToken } from '../common/jwt';
 import { Config } from '../common/config';
 import { buildHttpErrorResponse } from './response';
-import { IUser } from './controller/user/auth';
-
-declare global {
-  var Users: Set<IUser>;
-}
+import { User } from '../models/user';
+import { UserService } from '../services/users';
 
 const logger = Logger('HTTP-Server');
+
+declare global {
+  namespace Express {
+    interface Request {
+      user: User;
+    }
+  }
+}
 
 export class HttpApi {
   private app: express.Application;
@@ -43,17 +48,25 @@ export class HttpApi {
   }
 
   private _setRoutes(): void {
-    this.app.use((req, res, next) => {
+    this.app.use(async (req, res, next) => {
       const urlToIgnore = new Set<string>(['/', '/users/auth', '/users/register']);
       if (urlToIgnore.has(req.url)) return next();
 
       const token = req.headers[Config.TOKEN_HEADER_KEY] as string;
 
-      const isValid = jwtUtils.verifyToken(token);
-      if (!isValid) {
+      const jwt = jwtUtils.parseToken(token);
+      if (!jwt) {
         const err = new AccessDenied('Access denied');
         return res.status(err.httpCode).json(buildHttpErrorResponse(err));
       }
+
+      const user = await UserService.getUserById((jwt as VerifiedToken).userId);
+      if (!user) {
+        const err = new AccessDenied('Access denied: User is not found');
+        return res.status(err.httpCode).json(buildHttpErrorResponse(err));
+      }
+
+      req.user = user;
 
       next();
     });

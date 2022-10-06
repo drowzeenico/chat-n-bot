@@ -8,7 +8,7 @@ const Database = new DataSource({
   type: 'postgres',
   url: Config.DB.URL,
   entities: ['src/models/*.{ts,js}'],
-  migrations: ['src/migration/**/*.{ts,js}'],
+  migrations: ['src/migrations/**/*.{ts,js}'],
   migrationsTableName: '_migrations',
   subscribers: ['src/models/subscribers/*.{ts,js}'],
   ssl: Config.DB.USE_SSL,
