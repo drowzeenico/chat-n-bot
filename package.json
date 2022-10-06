@@ -6,11 +6,11 @@
   "scripts": {
     "build": "rimraf dist && tsc",
     "start": "node .",
-    "start:dev": "DOTENV_CONFIG_PATH=./dotfiles/env/.dev ts-node-dev -r dotenv/config --cls src/app.ts",
-    "test": "DOTENV_CONFIG_PATH=./dotfiles/env/.test jest --setupFiles dotenv/config --runInBand --forceExit --watch",
-    "test:server": "DOTENV_CONFIG_PATH=./dotfiles/env/.test npm run start:dev",
-    "pretypeorm:dev": "DOTENV_CONFIG_PATH=./dotfiles/env/.dev ts-node -r dotenv/config ./src/scripts/create-typeorm-config.ts",
-    "typeorm:dev": "DOTENV_CONFIG_PATH=./dotfiles/env/.dev ts-node -r dotenv/config ./node_modules/typeorm/cli.js -d src/common/db"
+    "start:dev": "DOTENV_CONFIG_PATH=./env/.dev ts-node-dev -r dotenv/config --cls src/app.ts",
+    "test": "DOTENV_CONFIG_PATH=./env/.test jest --setupFiles dotenv/config --runInBand --forceExit --watch",
+    "test:server": "DOTENV_CONFIG_PATH=./env/.test npm run start:dev",
+    "pretypeorm:dev": "DOTENV_CONFIG_PATH=./env/.dev ts-node -r dotenv/config ./src/scripts/create-typeorm-config.ts",
+    "typeorm:dev": "DOTENV_CONFIG_PATH=./env/.dev ts-node -r dotenv/config ./node_modules/typeorm/cli.js -d src/common/db"
   },
   "engines": {
     "node": "14.x",

@@ -1,5 +1,8 @@
 node_modules
 logs
-dotfiles
-!dotfiles/.env/.env.example
+
+env/*
+!env/.env.example
+
+
 ormconfig.json
