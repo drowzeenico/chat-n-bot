@@ -30,6 +30,9 @@ export const makeDbConnection = async () => {
     await Database.initialize();
     logger.info('Database has been connected');
   } catch (e) {
+    if (e instanceof Error) {
+      logger.error("Couldn't connecto to DB: %s", e.message)
+    }
     process.exit(1);
   }
 };
