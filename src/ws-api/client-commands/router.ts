@@ -1,8 +1,8 @@
 import { Client } from '../connection';
 import { IClientMessage } from '../server';
-import { EchoCommand, EchoPayload, EchoResponse } from './echo';
-import { PingCommand, PingPayload, PingResponse } from './ping';
-import { BroadcastCommand, BroadcastPayload, BroadcastResponse } from './broadcast';
+import { ChatList, ChatListPayload, ChatListResponse } from './chat-list';
+import { JoinToChat, JoinToChatPayload, JoinToChatResponse } from './join-to-chat';
+import { Message, MessagePayload, MessageResponse } from './message';
 
 export interface ICommand<I, O> {
   readonly name: string;
@@ -10,7 +10,7 @@ export interface ICommand<I, O> {
   process(payload: I, client: Client): Promise<O>;
 }
 
-type ICommandProcessors = typeof EchoCommand.process | typeof PingCommand.process | typeof BroadcastCommand.process;
+type ICommandProcessors = typeof ChatList.process | typeof JoinToChat.process | typeof Message.process;
 export type IPayload = Parameters<ICommandProcessors>[0];
 export type IResponse = Awaited<ReturnType<ICommandProcessors>>;
 
@@ -18,14 +18,14 @@ type Handler = (msg: IClientMessage, client: Client) => Promise<IResponse>;
 
 export const Router = new Map<string, Handler>();
 
-Router.set(EchoCommand.name, async (msg: IClientMessage, client: Client): Promise<EchoResponse> => {
-  return await EchoCommand.process(msg.payload as EchoPayload, client);
+Router.set(ChatList.name, async (msg: IClientMessage, client: Client): Promise<ChatListResponse> => {
+  return await ChatList.process(msg.payload as ChatListPayload, client);
 });
 
-Router.set(PingCommand.name, async (msg: IClientMessage, client: Client): Promise<PingResponse> => {
-  return await PingCommand.process(msg.payload as PingPayload, client);
+Router.set(JoinToChat.name, async (msg: IClientMessage, client: Client): Promise<JoinToChatResponse> => {
+  return await JoinToChat.process(msg.payload as JoinToChatPayload, client);
 });
 
-Router.set(BroadcastCommand.name, async (msg: IClientMessage, client: Client): Promise<BroadcastResponse> => {
-  return await BroadcastCommand.process(msg.payload as BroadcastPayload, client);
+Router.set(Message.name, async (msg: IClientMessage, client: Client): Promise<MessageResponse> => {
+  return await Message.process(msg.payload as MessagePayload, client);
 });

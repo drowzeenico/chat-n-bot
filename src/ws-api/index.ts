@@ -9,7 +9,7 @@ import { Client } from './connection';
 import { jwtUtils, VerifiedToken } from '../common/jwt';
 import { AccessDenied, BaseError } from '../errors';
 import { WebSocket } from 'ws';
-import { UserService } from '../services/users';
+import { UserService } from '../services/user';
 
 const logger = Logger('WS-Server');
 

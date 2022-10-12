@@ -10,7 +10,9 @@
     "test": " jest --setupFiles dotenv/config --runInBand --forceExit --watch",
     "test:server": "npm run start:dev",
     "pretypeorm": "ts-node -r dotenv/config ./src/scripts/create-typeorm-config.ts",
-    "typeorm": "ts-node -r dotenv/config ./node_modules/typeorm/cli.js -d src/common/db"
+    "typeorm": "ts-node -r dotenv/config ./node_modules/typeorm/cli.js -d src/common/db",
+    "migration:generate": "npm run typeorm -- migration:generate -d src/common/db",
+    "migration:run": "npm run typeorm -- migration:run"
   },
   "engines": {
     "node": "14.x",

@@ -1,7 +1,7 @@
 import { pbkdf2Sync } from 'crypto';
 import { Config } from '../common/config';
 import Database from '../common/db';
-import { RegistrationData } from '../http-api/controller/user/register';
+import { RegistrationData } from '../http-api/controllers/user';
 import { User } from '../models/user';
 
 class UserServices {
@@ -19,16 +19,13 @@ class UserServices {
   }
 
   async save(userToSave: RegistrationData): Promise<User | null> {
-    // stupid TypeORM can't return User Entity after save
-    // so that's why we need to re-request our user
-    // ridiculous!
-    const saved = await this.repo.save({
+    const userDTO = this.repo.create({
       login: userToSave.login,
       email: userToSave.email,
       password: this.hashPassword(userToSave.password),
     });
 
-    return await this.repo.findOneBy({ id: saved.id });
+    return await this.repo.save(userDTO);
   }
 }
 
