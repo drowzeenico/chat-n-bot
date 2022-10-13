@@ -1,36 +1,25 @@
 import Joi from '@hapi/joi';
+import { Client } from './types/client';
 import { BadRequestError, ResourceNotFound } from '../../errors';
 import { chatDTO } from '../../models/chat';
 import { ChatService } from '../../services/chat';
-import { Client } from '../connection';
-import { ICommand } from './router';
-
-export interface JoinToChatPayload {
-  chatId: number;
-}
-
-export interface JoinToChatResponse {
-  chat: chatDTO;
-  online: number;
-}
+import { Connection } from '../connection';
+import { Payloads } from './types/payloads';
 
 const commandValidationRule = Joi.object({
   chatId: Joi.number().required(),
 });
 
-export const JoinToChat: ICommand<JoinToChatPayload, JoinToChatResponse> = {
-  name: 'join-to-chat',
+export const JoinToChat: Client.Command<Payloads.JoinToChat> = {
+  name: Client.COMMANDS.JOIN_TO_CHAT,
 
-  async process(payload: JoinToChatPayload, client: Client): Promise<JoinToChatResponse> {
+  async process(payload: Payloads.JoinToChat, client: Connection) {
     const { error } = commandValidationRule.validate(payload);
     if (error) throw new BadRequestError(error.message, error);
 
     const chat = await ChatService.findChat(payload.chatId);
     if (!chat) throw new ResourceNotFound('Selected chat is not exists');
 
-    return {
-      chat: chat.DTO,
-      online: client.online(chat.id),
-    };
+    client.joinToChat(chat.id);
   },
 };

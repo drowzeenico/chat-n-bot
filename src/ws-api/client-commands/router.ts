@@ -1,31 +1,22 @@
-import { Client } from '../connection';
-import { IClientMessage } from '../server';
-import { ChatList, ChatListPayload, ChatListResponse } from './chat-list';
-import { JoinToChat, JoinToChatPayload, JoinToChatResponse } from './join-to-chat';
-import { Message, MessagePayload, MessageResponse } from './message';
+import { Connection } from '../connection';
+import { ChatList } from './chat-list';
+import { JoinToChat } from './join-to-chat';
+import { Message } from './message';
+import { Client } from './types/client';
+import { Payloads } from './types/payloads';
 
-export interface ICommand<I, O> {
-  readonly name: string;
+type Handler = (msg: Client.Message, connection: Connection) => Promise<void>;
 
-  process(payload: I, client: Client): Promise<O>;
-}
+export const Router = new Map<Client.COMMANDS, Handler>();
 
-type ICommandProcessors = typeof ChatList.process | typeof JoinToChat.process | typeof Message.process;
-export type IPayload = Parameters<ICommandProcessors>[0];
-export type IResponse = Awaited<ReturnType<ICommandProcessors>>;
-
-type Handler = (msg: IClientMessage, client: Client) => Promise<IResponse>;
-
-export const Router = new Map<string, Handler>();
-
-Router.set(ChatList.name, async (msg: IClientMessage, client: Client): Promise<ChatListResponse> => {
-  return await ChatList.process(msg.payload as ChatListPayload, client);
+Router.set(ChatList.name, async (msg: Client.Message, connection: Connection) => {
+  return await ChatList.process(msg.payload as Payloads.ChatList, connection);
 });
 
-Router.set(JoinToChat.name, async (msg: IClientMessage, client: Client): Promise<JoinToChatResponse> => {
-  return await JoinToChat.process(msg.payload as JoinToChatPayload, client);
+Router.set(JoinToChat.name, async (msg: Client.Message, connection: Connection) => {
+  return await JoinToChat.process(msg.payload as Payloads.JoinToChat, connection);
 });
 
-Router.set(Message.name, async (msg: IClientMessage, client: Client): Promise<MessageResponse> => {
-  return await Message.process(msg.payload as MessagePayload, client);
+Router.set(Message.name, async (msg: Client.Message, connection: Connection) => {
+  return await Message.process(msg.payload as Payloads.Message, connection);
 });

@@ -1,29 +1,14 @@
-import * as uuid from 'uuid';
-
 import { WebSocket } from 'ws';
 import { IParsedRequest } from '.';
-import { MessageModel } from '../models/message';
 import { User } from '../models/user';
+import { Client } from './client-commands/types/client';
+import { Server } from './server-events';
 
-const IndexById = new Map<string, Client>();
-const ChatsIndex = new Map<number, Map<string, Client>>();
+const IndexById = new Map<number, Connection>();
+const ChatsIndex = new Map<number, Map<number, Connection>>();
 
-export interface Message {
-  id: string;
-}
-
-export interface UserConnected extends Message {
-  message: string;
-}
-
-type ServerMessages = Message | UserConnected;
-
-type SystemInfo = {
-  // send some message
-};
-
-export class Client {
-  readonly id: string;
+export class Connection {
+  readonly id: number;
   readonly ip: string;
   readonly version: number;
   readonly token: string;
@@ -31,13 +16,22 @@ export class Client {
   private chatId?: number;
 
   constructor(readonly ws: WebSocket, parsed: IParsedRequest, user: User) {
-    this.id = uuid.v4();
     this.ip = parsed.ip!;
     this.version = parsed.verison;
     this.token = parsed.token!;
     this.user = user;
+    this.id = this.user.id;
 
     IndexById.set(this.id, this);
+  }
+
+  get usersChatId() {
+    return this.chatId;
+  }
+
+  // send to client
+  response(data: Client.IResponse) {
+    this.json(data);
   }
 
   online(chatId: number) {
@@ -46,14 +40,21 @@ export class Client {
 
   joinToChat(chatId: number) {
     if (!ChatsIndex.has(chatId)) {
-      ChatsIndex.set(chatId, new Map<string, Client>());
+      ChatsIndex.set(chatId, new Map<number, Connection>());
     }
 
     const chat = ChatsIndex.get(chatId)!;
+    if (chat.has(this.id)) return;
+
     chat.set(this.id, this);
     this.chatId = chatId;
 
-    this.sendToChat(chatId, {});
+    this.sendToChat(chatId, {
+      event: Server.Events.JOINED,
+      payload: {
+        userId: this.id,
+      },
+    });
   }
 
   leaveChat(chatId: number) {
@@ -68,7 +69,7 @@ export class Client {
     this.ws.send(JSON.stringify(data));
   }
 
-  sendById(clientIds: string[], data: ServerMessages) {
+  sendById(clientIds: number[], data: Server.IEvent) {
     clientIds.forEach(id => {
       if (IndexById.has(id)) {
         IndexById.get(id)?.json(data);
@@ -76,21 +77,35 @@ export class Client {
     });
   }
 
-  sendToAll(data: ServerMessages) {
+  sendToAll(data: Server.IEvent) {
     IndexById.forEach((client, id) => {
       if (id === this.id) return;
       client.json(data);
     });
   }
 
-  sendToChat(chatId: number, data: MessageModel | SystemInfo) {
-    IndexById.forEach((client, id) => {
-      if (id === this.id) return;
+  sendToChat(chatId: number, data: Server.IEvent) {
+    if (!ChatsIndex.has(chatId)) return;
+    const chat = ChatsIndex.get(chatId)!;
+
+    for (const client of chat.values()) {
       client.json(data);
+    }
+  }
+
+  connected() {
+    this.sendToAll({
+      event: Server.Events.CONNECTED,
+      payload: {
+        userId: this.id,
+      },
     });
   }
 
-  connected(payload: string) {
-    this.sendToAll({ id: this.id, message: payload });
+  disconnect() {
+    IndexById.delete(this.id);
+    if (this.chatId) {
+      ChatsIndex.get(this.chatId)?.delete(this.id);
+    }
   }
 }

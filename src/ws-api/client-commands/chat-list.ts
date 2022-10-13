@@ -1,26 +1,27 @@
-import { chatDTO } from '../../models/chat';
 import { ChatService } from '../../services/chat';
-import { Client } from '../connection';
-import { ICommand } from './router';
+import { Connection } from '../connection';
+import { Client } from './types/client';
+import { Payloads } from './types/payloads';
 
-export interface ChatListPayload {}
+export const ChatList: Client.Command<Payloads.ChatList> = {
+  name: Client.COMMANDS.CHAT_LIST,
 
-export type ChatListResponse = {
-  chat: chatDTO;
-  online: number;
-}[];
-
-export const ChatList: ICommand<ChatListPayload, ChatListResponse> = {
-  name: 'chat-list',
-
-  async process(payload: ChatListPayload, client: Client): Promise<ChatListResponse> {
+  async process(payload: Payloads.ChatList, client: Connection) {
     const chatList = await ChatService.list();
 
-    return chatList.map(chat => {
+    const list = chatList.map(chat => {
       return {
         chat: chat.DTO,
         online: client.online(chat.id),
       };
     });
+
+    const response: Client.ChatList = {
+      command: Client.COMMANDS.CHAT_LIST,
+      result: list,
+      success: true,
+    };
+
+    client.response(response);
   },
 };
