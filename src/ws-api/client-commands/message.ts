@@ -19,21 +19,20 @@ export const Message: Client.Command<Payloads.Message> = {
     const { error } = commandValidationRule.validate(payload);
     if (error) throw new BadRequestError(error.message, error);
 
-    if (client.usersChatId !== payload.chatId) throw new AccessDenied("You're not allowed to write to this chat");
+    // is client connected to chat
+    if (client.usersChatId !== payload.chatId) {
+      throw new AccessDenied("You're not allowed to write to this chat");
+    }
 
-    const messages = new MessageServices(payload.chatId);
-    const newMessage = await messages.save({
+    const messageService = new MessageServices(payload.chatId);
+    const message = await messageService.save({
       ...payload,
       from: client.user.id,
     });
 
     const messageToChat: Server.Message = {
       event: Server.Events.MESSAGE,
-      payload: {
-        from: client.id,
-        to: payload.to,
-        text: payload.text,
-      },
+      payload: message.DTO,
     };
     client.sendToChat(payload.chatId, messageToChat);
   },

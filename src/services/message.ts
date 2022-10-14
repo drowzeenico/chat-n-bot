@@ -1,17 +1,28 @@
+import { Entity } from 'typeorm';
 import Database from '../common/db';
-import { MessageFactory, MessageModel } from '../models/message';
+import { AppError } from '../errors';
+import { Message } from '../models/message';
 
-export type NewMessage = Pick<MessageModel, 'chatId' | 'from' | 'to' | 'text'>;
-
+export type NewMessage =
+  | Pick<Message, 'chatId' | 'from' | 'text'>
+  | {
+      to?: number;
+    };
 export class MessageServices {
   private repo;
+
   constructor(chatId: number) {
-    const MessageEntity = MessageFactory(chatId);
-    this.repo = Database.getRepository(MessageEntity);
+    this.repo = Database.getRepository(Message);
+    this.repo.metadata.tablePath = 'messages_' + chatId;
   }
 
-  async save(data: NewMessage): Promise<MessageModel> {
-    const messageDTO = this.repo.create(data);
-    return await this.repo.save(messageDTO);
+  async save(data: NewMessage): Promise<Message> {
+    try {
+      const dto = this.repo.create(data);
+      console.log(dto);
+      return await this.repo.save(dto);
+    } catch (e) {
+      throw new AppError("Can't send message due server error", e as Error);
+    }
   }
 }

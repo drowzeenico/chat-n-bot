@@ -15,10 +15,10 @@ export class Chat {
   name: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  createdAt: string;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt: string;
+  updatedAt: Date;
 
   get DTO(): chatDTO {
     return pick(this, ['id', 'owner', 'name']);

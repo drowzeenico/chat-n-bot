@@ -1,3 +1,5 @@
+import { MessageDTO } from '../../models/message';
+
 export namespace Server {
   export enum Events {
     CONNECTED = 'user-connected',
@@ -34,10 +36,6 @@ export namespace Server {
 
   export interface Message extends IEvent {
     event: Events.MESSAGE;
-    payload: {
-      from: number;
-      to?: number;
-      text: string;
-    };
+    payload: MessageDTO;
   }
 }

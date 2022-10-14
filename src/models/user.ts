@@ -18,10 +18,10 @@ export class User {
   password: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  createdAt: string;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt: string;
+  updatedAt: Date;
 
   get DTO(): UserDto {
     return pick(this, ['id', 'login', 'email', 'createdAt']);

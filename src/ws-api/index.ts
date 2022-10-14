@@ -10,6 +10,7 @@ import { jwtUtils, VerifiedToken } from '../common/jwt';
 import { AccessDenied, BaseError } from '../errors';
 import { WebSocket } from 'ws';
 import { UserService } from '../services/user';
+import e from 'express';
 
 const logger = Logger('WS-Server');
 
@@ -74,5 +75,9 @@ export class WssLauncher {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     }
     socket.destroy();
+  }
+
+  close(cb: (err?: Error) => void) {
+    this.wss.close(cb);
   }
 }
