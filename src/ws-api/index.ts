@@ -5,11 +5,12 @@ import { URL } from 'url';
 import { Config } from '../common/config';
 import { Logger } from '../common/logger';
 import { wsServer } from './server';
-import { Client } from './connection';
+import { Connection } from './connection';
 import { jwtUtils, VerifiedToken } from '../common/jwt';
 import { AccessDenied, BaseError } from '../errors';
 import { WebSocket } from 'ws';
-import { UserService } from '../services/users';
+import { UserService } from '../services/user';
+import e from 'express';
 
 const logger = Logger('WS-Server');
 
@@ -43,13 +44,13 @@ export class WssLauncher {
         return this.sendError(new AccessDenied('Access denied: User is not found'), _ws);
       }
 
-      const ws = new Client(_ws, parsed, user);
+      const ws = new Connection(_ws, parsed, user);
       this.wss.emit('connection', ws, req);
     });
   }
 
   private sendError(err: BaseError, ws: WebSocket) {
-    const response = this.wss.buildErrorResponse(err);
+    const response = this.wss.buildError(err);
     ws.send(JSON.stringify(response));
     return ws.close(1002, err.message);
   }
@@ -74,5 +75,9 @@ export class WssLauncher {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     }
     socket.destroy();
+  }
+
+  close(cb: (err?: Error) => void) {
+    this.wss.close(cb);
   }
 }

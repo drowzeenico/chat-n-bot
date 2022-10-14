@@ -2,13 +2,14 @@ import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 
 import UserRoutes from './routes/user';
+import ChatRoutes from './routes/chat';
 import { AccessDenied, BaseError, ResourceNotFound } from '../errors';
 import { Logger } from '../common/logger';
 import { jwtUtils, VerifiedToken } from '../common/jwt';
 import { Config } from '../common/config';
 import { buildHttpErrorResponse } from './response';
 import { User } from '../models/user';
-import { UserService } from '../services/users';
+import { UserService } from '../services/user';
 
 const logger = Logger('HTTP-Server');
 
@@ -76,6 +77,7 @@ export class HttpApi {
     });
 
     this.app.use('/users', UserRoutes);
+    this.app.use('/chat', ChatRoutes);
 
     this.app.use((req, res, next) => {
       next(new ResourceNotFound('Resourse not found'));

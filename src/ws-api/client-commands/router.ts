@@ -1,31 +1,22 @@
-import { Client } from '../connection';
-import { IClientMessage } from '../server';
-import { EchoCommand, EchoPayload, EchoResponse } from './echo';
-import { PingCommand, PingPayload, PingResponse } from './ping';
-import { BroadcastCommand, BroadcastPayload, BroadcastResponse } from './broadcast';
+import { Connection } from '../connection';
+import { ChatList } from './chat-list';
+import { JoinToChat } from './join-to-chat';
+import { Message } from './message';
+import { Client } from './types/client';
+import { Payloads } from './types/payloads';
 
-export interface ICommand<I, O> {
-  readonly name: string;
+type Handler = (msg: Client.Message, connection: Connection) => Promise<void>;
 
-  process(payload: I, client: Client): Promise<O>;
-}
+export const Router = new Map<Client.COMMANDS, Handler>();
 
-type ICommandProcessors = typeof EchoCommand.process | typeof PingCommand.process | typeof BroadcastCommand.process;
-export type IPayload = Parameters<ICommandProcessors>[0];
-export type IResponse = Awaited<ReturnType<ICommandProcessors>>;
-
-type Handler = (msg: IClientMessage, client: Client) => Promise<IResponse>;
-
-export const Router = new Map<string, Handler>();
-
-Router.set(EchoCommand.name, async (msg: IClientMessage, client: Client): Promise<EchoResponse> => {
-  return await EchoCommand.process(msg.payload as EchoPayload, client);
+Router.set(ChatList.name, async (msg: Client.Message, connection: Connection) => {
+  return await ChatList.process(msg.payload as Payloads.ChatList, connection);
 });
 
-Router.set(PingCommand.name, async (msg: IClientMessage, client: Client): Promise<PingResponse> => {
-  return await PingCommand.process(msg.payload as PingPayload, client);
+Router.set(JoinToChat.name, async (msg: Client.Message, connection: Connection) => {
+  return await JoinToChat.process(msg.payload as Payloads.JoinToChat, connection);
 });
 
-Router.set(BroadcastCommand.name, async (msg: IClientMessage, client: Client): Promise<BroadcastResponse> => {
-  return await BroadcastCommand.process(msg.payload as BroadcastPayload, client);
+Router.set(Message.name, async (msg: Client.Message, connection: Connection) => {
+  return await Message.process(msg.payload as Payloads.Message, connection);
 });

@@ -24,7 +24,7 @@ if (env.error || !env.parsed) throw env.error;
 const parsed = dotenvParseVariables(env.parsed);
 
 const configSchema = Joi.object({
-  ENV: Joi.string().optional().default('dev'),
+  ENV: Joi.string().optional().valid('dev', 'test', 'stage', 'prod').default('dev'),
   PORT: Joi.number().required().default(9000),
   REDIS: Joi.string().uri().required(),
   DB: Joi.object({
@@ -57,7 +57,7 @@ const { error, value } = configSchema.validate(rawConfig, {
   allowUnknown: false,
 });
 if (error) {
-  throw new ConfigError(error.message, error);
+  Promise.reject(new ConfigError(error.message, error));
 }
 
 export const Config = value;
