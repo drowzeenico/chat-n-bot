@@ -11,8 +11,9 @@
     "test:server": "npm run start:dev",
     "pretypeorm": "ts-node -r dotenv/config ./src/scripts/create-typeorm-config.ts",
     "typeorm": "ts-node -r dotenv/config ./node_modules/typeorm/cli.js -d src/common/db",
-    "migration:generate": "npm run typeorm -- migration:generate -d src/common/db",
-    "migration:run": "npm run typeorm -- migration:run"
+    "migration:create": "ts-node -r dotenv/config ./node_modules/typeorm/cli.js migration:create",
+    "migration:run": "npm run typeorm -- migration:run",
+    "migration:revert": "npm run typeorm -- migration:revert"
   },
   "engines": {
     "node": "14.x",

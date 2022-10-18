@@ -1,9 +1,15 @@
-import { pick } from 'lodash';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { pick } from "lodash";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
-export type chatDTO = Pick<Chat, 'id' | 'owner' | 'name'>;
+export type chatDTO = Pick<Chat, "id" | "owner" | "name" | "isOpen">;
 
-@Entity('chats', { synchronize: false })
+@Entity("chats", { synchronize: false })
 export class Chat {
   @PrimaryGeneratedColumn()
   id: number;
@@ -14,13 +20,20 @@ export class Chat {
   @Column({ nullable: false })
   name: string;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @Column({ nullable: true })
+  password: string;
+
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 
   get DTO(): chatDTO {
-    return pick(this, ['id', 'owner', 'name']);
+    return pick(this, ["id", "owner", "name", "isOpen"]);
+  }
+
+  get isOpen(): boolean {
+    return this.password == null;
   }
 }
