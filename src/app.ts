@@ -17,7 +17,7 @@ class Chat_n_Bot_Application {
 
     const api = new HttpApi().get();
     const httpServer = http.createServer(api);
-    httpServer.listen(Config.PORT, '0.0.0.0', () => logger.info('Starting at PORT=%d', Config.PORT));
+    httpServer.listen(Config.PORT, Config.HTTP_API_URL, () => logger.info('Starting at PORT=%d', Config.PORT));
 
     this.wsServer = new WssLauncher(httpServer);
   }

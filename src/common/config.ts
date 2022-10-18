@@ -5,12 +5,13 @@ import { ConfigError } from '../errors';
 
 export interface IConfig {
   ENV: string;
-  PORT: string;
+  HTTP_API_URL: string;
+  PORT: number;
   REDIS: string;
   DB: {
     URL: string;
-    USE_SSL: string;
-    LOGGING: string;
+    USE_SSL: boolean;
+    LOGGING: boolean;
   };
   WSAPI: string;
   JWT_SECRET_KEY: string;
@@ -25,6 +26,7 @@ const parsed = dotenvParseVariables(env.parsed);
 
 const configSchema = Joi.object({
   ENV: Joi.string().optional().valid('dev', 'test', 'stage', 'prod').default('dev'),
+  HTTP_API_URL: Joi.string().required(),
   PORT: Joi.number().required().default(9000),
   REDIS: Joi.string().uri().required(),
   DB: Joi.object({
@@ -40,12 +42,13 @@ const configSchema = Joi.object({
 
 const rawConfig: IConfig = {
   ENV: parsed.ENV as string,
-  PORT: parsed.PORT as string,
+  HTTP_API_URL: parsed.HTTP_API_URL as string,
+  PORT: parsed.PORT as number,
   REDIS: parsed.REDIS as string,
   DB: {
     URL: parsed.DB_URL as string,
-    USE_SSL: parsed.DB_USE_SSL as string,
-    LOGGING: parsed.DB_LOGGING as string,
+    USE_SSL: parsed.DB_USE_SSL as boolean,
+    LOGGING: parsed.DB_LOGGING as boolean,
   },
   WSAPI: parsed.WSAPI as string,
   JWT_SECRET_KEY: parsed.JWT_SECRET_KEY as string,
@@ -60,4 +63,4 @@ if (error) {
   Promise.reject(new ConfigError(error.message, error));
 }
 
-export const Config = value;
+export const Config = rawConfig;
