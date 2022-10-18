@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class chatTable1665412096821 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -9,12 +9,12 @@ export class chatTable1665412096821 implements MigrationInterface {
             "name" citext NOT NULL,
             "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
             "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
-            CONSTRAINT "Unique_Name" UNIQUE ("id", "name"),
+            CONSTRAINT "Unique_Name" UNIQUE ("owner", "name"),
             CONSTRAINT "ChatPK" PRIMARY KEY ("id")
         )`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('chats');
+    await queryRunner.dropTable("chats");
   }
 }

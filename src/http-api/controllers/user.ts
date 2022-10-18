@@ -1,10 +1,10 @@
-import Joi from '@hapi/joi';
-import { BadRequestError, ResourceNotFound, AppError } from '../../errors';
-import { jwtUtils } from '../../common/jwt';
-import Database from '../../common/db';
-import { User } from '../../models/user';
-import { UserService } from '../../services/user';
-import { UserDto } from '../../models/user';
+import Joi from "@hapi/joi";
+import { BadRequestError, ResourceNotFound, AppError } from "../../errors";
+import { jwtUtils } from "../../common/jwt";
+import Database from "../../common/db";
+import { User } from "../../models/user";
+import { UserService, UserServices } from "../../services/user";
+import { UserDto } from "../../models/user";
 
 type UserCredentials = {
   login: string;
@@ -25,12 +25,12 @@ export const UserController = {
     }).required();
 
     const { error } = validationRules.validate(access);
-    if (error) throw new BadRequestError('Validation error:' + error.message);
+    if (error) throw new BadRequestError("Validation error:" + error.message);
 
     const user = await Database.getRepository(User).findOne({
       where: {
         login: access.login,
-        password: UserService.hashPassword(access.password),
+        password: UserServices.hashPassword(access.password),
       },
     });
 
@@ -47,17 +47,19 @@ export const UserController = {
     }).required();
 
     const { error } = validationRules.validate(credentials);
-    if (error) throw new BadRequestError('Validation error:' + error.message);
+    if (error) throw new BadRequestError("Validation error:" + error.message);
 
     try {
       const user = await UserService.save(credentials);
       if (!user) {
-        throw new AppError('Error occured while registering new user');
+        throw new AppError("Error occured while registering new user");
       }
 
       return user!.DTO;
     } catch (e) {
-      throw new AppError('Error occured while registering new user', { message: (e as Error).message });
+      throw new AppError("Error occured while registering new user", {
+        message: (e as Error).message,
+      });
     }
   },
 };

@@ -1,7 +1,8 @@
-import Database from '../common/db';
-import { AppError, ResourceNotFound } from '../errors';
-import { ChatUpdateData } from '../http-api/controllers/chat';
-import { Chat } from '../models/chat';
+import Database from "../common/db";
+import { AppError, ResourceNotFound } from "../errors";
+import { Chat } from "../models/chat";
+import { ChatTypes } from "../types/chat";
+import { UserServices } from "./user";
 
 class ChatServices {
   private repo = Database.getRepository(Chat);
@@ -14,9 +15,13 @@ class ChatServices {
     return await this.repo.findOneBy({ id: chatId });
   }
 
-  async create(owner: number, name: string): Promise<Chat> {
+  async create(owner: number, data: ChatTypes.CreatePayload): Promise<Chat> {
+    if (data.password) {
+      data.password = UserServices.hashPassword(data.password);
+    }
+
     const chatDTO = this.repo.create({
-      name: name,
+      ...data,
       owner: owner,
     });
 
@@ -30,21 +35,29 @@ class ChatServices {
     return chat;
   }
 
-  async update(owner: number, data: ChatUpdateData): Promise<Chat> {
+  async update(owner: number, data: ChatTypes.UpdatePayload): Promise<Chat> {
     const chat = await this.repo.findOneBy({ id: data.chatId });
-    if (!chat) throw new ResourceNotFound('Requested chat is missing');
+    if (!chat) throw new ResourceNotFound("Requested chat is missing");
 
-    if (chat.owner !== owner) throw new AppError("You don't have permissions to change this chat");
+    if (chat.owner !== owner)
+      throw new AppError("You don't have permissions to change this chat");
 
-    chat.name = data.name;
+    if (data.name) {
+      chat.name = data.name;
+    }
+
+    if (data.password) {
+      chat.password = UserServices.hashPassword(data.password);
+    }
     return await this.repo.save(chat);
   }
 
   async remove(owner: number, chatId: number): Promise<Chat> {
     const chat = await this.repo.findOneBy({ id: chatId });
-    if (!chat) throw new ResourceNotFound('Requested chat is missing');
+    if (!chat) throw new ResourceNotFound("Requested chat is missing");
 
-    if (chat.owner !== owner) throw new AppError("You don't have permissions to change this chat");
+    if (chat.owner !== owner)
+      throw new AppError("You don't have permissions to change this chat");
 
     await this.repo.query(`
       DROP TABLE messages_${chat.id};
