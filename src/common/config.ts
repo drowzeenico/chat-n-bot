@@ -17,6 +17,13 @@ export interface IConfig {
   JWT_SECRET_KEY: string;
   TOKEN_HEADER_KEY: string;
   SALT: string;
+  AIAPI: {
+    BRAIN_SHOP_BID: number;
+    BRAIN_SHOP_KEY: string;
+    BRAIN_SHOP_UID: 'mashape';
+    RAPID_KEY: string;
+    RAPID_HOST: string;
+  };
 }
 
 let env = config({ path: process.env.DOTENV_CONFIG_PATH });
@@ -38,6 +45,13 @@ const configSchema = Joi.object({
   JWT_SECRET_KEY: Joi.string().required(),
   TOKEN_HEADER_KEY: Joi.string().required(),
   SALT: Joi.string(),
+  AIAPI: Joi.object({
+    BRAIN_SHOP_BID: Joi.number().required(),
+    BRAIN_SHOP_KEY: Joi.string().required(),
+    BRAIN_SHOP_UID: Joi.string().default('mashape'),
+    RAPID_KEY: Joi.string().required(),
+    RAPID_HOST: Joi.string().uri().required(),
+  }),
 }).required();
 
 const rawConfig: IConfig = {
@@ -54,6 +68,13 @@ const rawConfig: IConfig = {
   JWT_SECRET_KEY: parsed.JWT_SECRET_KEY as string,
   TOKEN_HEADER_KEY: parsed.TOKEN_HEADER_KEY as string,
   SALT: parsed.SALT as string,
+  AIAPI: {
+    BRAIN_SHOP_BID: parsed.BRAIN_SHOP_BID as number,
+    BRAIN_SHOP_KEY: parsed.BRAIN_SHOP_KEY as string,
+    BRAIN_SHOP_UID: 'mashape',
+    RAPID_KEY: parsed.RAPID_KEY as string,
+    RAPID_HOST: parsed.RAPID_HOST as string,
+  },
 };
 
 const { error, value } = configSchema.validate(rawConfig, {
