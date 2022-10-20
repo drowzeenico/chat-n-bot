@@ -57,15 +57,15 @@ export class HttpAPI {
   }
 
   async getAnswer(message: string) {
-    const query = { bid: '178', key: 'sX5A2PcYZbsN5EY6', uid: 'mashape', msg: message };
+    const query = { bid: Config.AIAPI.BRAIN_SHOP_BID, key: Config.AIAPI.BRAIN_SHOP_KEY, uid: Config.AIAPI.BRAIN_SHOP_UID, msg: message };
 
     const options: http.ClientRequestArgs = {
-      hostname: 'https://acobot-brainshop-ai-v1.p.rapidapi.com',
+      hostname: Config.AIAPI.RAPID_HOST,
       path: '/get?' + stringify(query),
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': 'a55d899c68mshd4c6ad8015251b8p156543jsn9a9bc44c4680',
-        'X-RapidAPI-Host': 'acobot-brainshop-ai-v1.p.rapidapi.com',
+        'X-RapidAPI-Key': Config.AIAPI.RAPID_KEY,
+        'X-RapidAPI-Host': Config.AIAPI.RAPID_HOST.replace('http://', ''),
       },
     };
 
