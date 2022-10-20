@@ -1,7 +1,8 @@
 import { ChatService } from '../../services/chat';
 import { Connection } from '../connection';
-import { Client } from './types/client';
-import { Payloads } from './types/payloads';
+import { Client } from '../../types/client-commands/client';
+import { Payloads } from '../../types/client-commands/payloads';
+import { Server } from '../../types/server-events';
 
 export const ChatList: Client.Command<Payloads.ChatList> = {
   name: Client.COMMANDS.CHAT_LIST,
@@ -16,12 +17,9 @@ export const ChatList: Client.Command<Payloads.ChatList> = {
       };
     });
 
-    const response: Client.ChatList = {
-      command: Client.COMMANDS.CHAT_LIST,
-      result: list,
-      success: true,
-    };
-
-    client.response(response);
+    client.response({
+      event: Server.Events.CHAT_LIST,
+      payload: list,
+    });
   },
 };

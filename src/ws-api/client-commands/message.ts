@@ -2,9 +2,9 @@ import Joi from '@hapi/joi';
 import { AccessDenied, BadRequestError } from '../../errors';
 import { Connection } from '../connection';
 import { MessageServices } from '../../services/message';
-import { Client } from './types/client';
-import { Payloads } from './types/payloads';
-import { Server } from '../server-events';
+import { Client } from '../../types/client-commands/client';
+import { Payloads } from '../../types/client-commands/payloads';
+import { Server } from '../../types/server-events';
 
 const commandValidationRule = Joi.object({
   chatId: Joi.number().required(),
@@ -30,10 +30,9 @@ export const Message: Client.Command<Payloads.Message> = {
       from: client.user.id,
     });
 
-    const messageToChat: Server.Message = {
+    client.sendToChat(payload.chatId, {
       event: Server.Events.MESSAGE,
       payload: message.DTO,
-    };
-    client.sendToChat(payload.chatId, messageToChat);
+    });
   },
 };

@@ -1,5 +1,5 @@
-import { chatDTO } from '../../../models/chat';
-import { Connection } from '../../connection';
+import { chatDTO } from '../../models/chat';
+import { Connection } from '../../ws-api/connection';
 import { Payloads } from './payloads';
 
 export namespace Client {
@@ -21,7 +21,6 @@ export namespace Client {
 
   export interface IResponse {
     command?: COMMANDS;
-    success: boolean;
     result?: unknown;
   }
 
@@ -30,14 +29,5 @@ export namespace Client {
       message: string;
       object: Error;
     };
-  }
-
-  export interface ChatList extends IResponse {
-    command: COMMANDS.CHAT_LIST;
-    success: true;
-    result: {
-      chat: chatDTO;
-      online: number;
-    }[];
   }
 }

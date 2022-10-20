@@ -1,8 +1,7 @@
 import { WebSocket } from 'ws';
 import { IParsedRequest } from '.';
 import { User } from '../models/user';
-import { Client } from './client-commands/types/client';
-import { Server } from './server-events';
+import { Server } from '../types/server-events';
 
 const IndexById = new Map<number, Connection>();
 const ChatsIndex = new Map<number, Map<number, Connection>>();
@@ -30,7 +29,7 @@ export class Connection {
   }
 
   // send to client
-  response(data: Client.IResponse) {
+  response(data: Server.IEvent) {
     this.json(data);
   }
 

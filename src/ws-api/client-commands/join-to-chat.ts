@@ -1,10 +1,9 @@
 import Joi from '@hapi/joi';
-import { Client } from './types/client';
+import { Client } from '../../types/client-commands/client';
 import { BadRequestError, ResourceNotFound } from '../../errors';
-import { chatDTO } from '../../models/chat';
 import { ChatService } from '../../services/chat';
 import { Connection } from '../connection';
-import { Payloads } from './types/payloads';
+import { Payloads } from '../../types/client-commands/payloads';
 
 const commandValidationRule = Joi.object({
   chatId: Joi.number().required(),

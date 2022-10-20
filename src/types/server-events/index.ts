@@ -1,3 +1,4 @@
+import { chatDTO } from '../../models/chat';
 import { MessageDTO } from '../../models/message';
 
 export namespace Server {
@@ -6,11 +7,13 @@ export namespace Server {
     JOINED = 'joined-to-chat',
     LEAVED = 'leaved-chat',
     MESSAGE = 'message-to-chat',
+    CHAT_LIST = 'chat-list',
   }
 
   export interface IEvent {
     event: Events;
     payload: unknown;
+    error?: Error;
   }
 
   export interface Connected extends IEvent {
@@ -37,5 +40,13 @@ export namespace Server {
   export interface Message extends IEvent {
     event: Events.MESSAGE;
     payload: MessageDTO;
+  }
+
+  export interface ChatList extends IEvent {
+    event: Events.CHAT_LIST;
+    payload: {
+      chat: chatDTO;
+      online: number;
+    }[];
   }
 }
