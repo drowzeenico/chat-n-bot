@@ -5,7 +5,7 @@ import { Connection } from './connection';
 import { Logger } from '../common/logger';
 import { ResourceNotFound, UnsupportedCommandFormatError } from '../errors';
 import { Router } from './client-commands/router';
-import { Client } from './client-commands/types/client';
+import { Client } from '../types/client-commands/client';
 
 const logger = Logger('WebSocket-Server');
 
@@ -24,8 +24,7 @@ export class wsServer extends WebSocket.Server {
   }
 
   onConnection(client: Connection) {
-    const logInfo = `Connected id=${client.id}, readyState=${client.ws.readyState}`;
-    logger.info(logInfo);
+    logger.info(`Connected id=${client.id}, readyState=${client.ws.readyState}`);
     client.connected();
 
     client.ws.on('message', async data => {
@@ -63,7 +62,6 @@ export class wsServer extends WebSocket.Server {
   buildError(err: Error, cmd?: Client.Message): Client.ErrorResponse {
     return {
       command: cmd?.name,
-      success: false,
       error: {
         message: err.message,
         object: err,

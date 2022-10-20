@@ -2,8 +2,8 @@ import { Connection } from '../connection';
 import { ChatList } from './chat-list';
 import { JoinToChat } from './join-to-chat';
 import { Message } from './message';
-import { Client } from './types/client';
-import { Payloads } from './types/payloads';
+import { Client } from '../../types/client-commands/client';
+import { Payloads } from '../../types/client-commands/payloads';
 
 type Handler = (msg: Client.Message, connection: Connection) => Promise<void>;
 
