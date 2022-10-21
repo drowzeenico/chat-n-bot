@@ -18,6 +18,15 @@ export namespace Client {
     name: COMMANDS;
     payload: Payloads.List;
   }
+  export interface ChatList extends Message {
+    name: COMMANDS.CHAT_LIST;
+    payload: Payloads.ChatList;
+  }
+
+  export interface JoinToChat extends Message {
+    name: COMMANDS.JOIN_TO_CHAT;
+    payload: Payloads.JoinToChat;
+  }
 
   export interface IResponse {
     command?: COMMANDS;

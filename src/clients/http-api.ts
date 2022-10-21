@@ -3,7 +3,9 @@ import { stringify } from 'querystring';
 
 import { Config } from '../common/config';
 import { IHttpErrorResponse, IHttpSuccessResponse } from '../http-api/response';
+import { chatDTO } from '../models/chat';
 import { UserDto } from '../models/user';
+import { ChatTypes } from '../types/chat';
 import { UserTypes } from '../types/user';
 
 export class HttpAPI {
@@ -15,6 +17,10 @@ export class HttpAPI {
 
   async reqistration(regData: UserTypes.RegistrationData) {
     return (await this.request('POST', '/users/register', regData)) as IHttpSuccessResponse<UserDto> | IHttpErrorResponse;
+  }
+
+  async createChat(data: ChatTypes.CreatePayload) {
+    return (await this.request('POST', '/chat', data)) as IHttpSuccessResponse<chatDTO> | IHttpErrorResponse;
   }
 
   private request(method: 'GET' | 'POST', url: string, payload?: any) {

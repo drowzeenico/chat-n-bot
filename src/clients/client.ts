@@ -1,39 +1,28 @@
 import { Config } from '../common/config';
 import { client } from 'websocket';
 import { stringify } from 'querystring';
+import { workerData } from 'worker_threads';
 
 import { Logger } from '../common/logger';
-import { getPause, PASSWORD } from './list';
-import { ClientManager } from './manager';
+import { getChatData, PASSWORD } from './templates';
 import { User } from '../models/user';
-import { makeDbConnection } from '../common/db';
-import { Client } from '../ws-api/client-commands/types/client';
-import { UnsupportedCommandFormatError } from '../errors';
+import Database, { makeDbConnection } from '../common/db';
 import Joi from '@hapi/joi';
+import { Server } from '../types/server-events';
+import { Client } from '../types/client-commands/client';
+
+import { ThreadData } from '.';
+import { HttpAPI } from './http-api';
+import { sample } from 'lodash';
+
+const logger = Logger(`[Client thread]`);
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('UNHANDLED', reason);
 });
 
-const logger = Logger('Client');
-const MAX_CLIENTS = 100;
-
-(async () => {
-  await makeDbConnection();
-  const Manager = new ClientManager();
-  await Manager.init();
-
-  let clientsConnected = 0;
-  for (const user of Manager.clients) {
-    const token = await Manager.auth({ login: user.login, password: PASSWORD });
-    setTimeout(async () => {
-      if (clientsConnected >= MAX_CLIENTS) return;
-
-      connect(token, user);
-      clientsConnected++;
-    }, getPause());
-  }
-})();
+const payload: ThreadData = workerData;
+const http = new HttpAPI();
 
 const connect = async (token: string, user: User) => {
   const ws = new client();
@@ -45,15 +34,36 @@ const connect = async (token: string, user: User) => {
     logger.error('Connect Error: ' + error.toString());
   });
 
-  ws.on('connect', connection => {
+  ws.on('connect', async connection => {
     logger.info(`Client ${user.login} with id=${user.id} is connected`);
 
-    const getChatList = JSON.stringify({
-      name: 'chat-list',
-      payload: {},
-    });
+    const send = (data: Client.Message) => {
+      connection.send(Buffer.from(JSON.stringify(data)));
+    };
 
-    connection.send(Buffer.from(getChatList));
+    if (payload.createChat) {
+      const res = await http.createChat(getChatData());
+      if (!res.success) {
+        logger.error("Couldn't create chat", res.error.message);
+        logger.info('Trying to connect to another chats...');
+
+        const chatList: Client.ChatList = {
+          name: Client.COMMANDS.CHAT_LIST,
+          payload: {},
+        };
+
+        send(chatList);
+      } else {
+        const joinToChat: Client.JoinToChat = {
+          name: Client.COMMANDS.JOIN_TO_CHAT,
+          payload: {
+            chatId: res.response.id,
+          },
+        };
+
+        send(joinToChat);
+      }
+    }
 
     connection.on('error', error => {
       logger.error('Connection Error: ' + error.toString());
@@ -63,21 +73,56 @@ const connect = async (token: string, user: User) => {
       logger.warn('Connection Closed');
     });
 
-    connection.on('message', message => {
-      if (message.type === 'utf8') {
+    connection.on('message', async msg => {
+      if (msg.type === 'utf8') {
         try {
-          const msg = JSON.parse(message.utf8Data) as Client.Message;
+          const message = JSON.parse(msg.utf8Data) as Server.IEvent;
           const commandValidationRule = Joi.object({
             name: Joi.string().required(),
             payload: Joi.object().required(),
           }).required();
 
-          const { error, value } = commandValidationRule.validate(msg);
+          const { error, value } = commandValidationRule.validate(message);
           if (error) {
-            const e = new UnsupportedCommandFormatError(`Unsupported format: ${error!.message}`);
-            return connection.send(JSON.stringify(buildError(e, msg)));
+            return logger.error(`Unsupported format: ${error.message}`);
           }
-          switch (msg.name) {
+
+          switch (message.event) {
+            case Server.Events.CHAT_LIST:
+              {
+                // connect to random chat from avalible chats
+                const data = message as Server.ChatList;
+                const ids = data.payload.map(c => c.chat.id);
+                const randId = sample(ids);
+                if (!randId) {
+                  // what to do is chat doesn't exist?
+                }
+
+                const joinToChat: Client.JoinToChat = {
+                  name: Client.COMMANDS.JOIN_TO_CHAT,
+                  payload: {
+                    chatId: randId!,
+                  },
+                };
+
+                send(joinToChat);
+              }
+              break;
+
+            case Server.Events.JOINED:
+              {
+              }
+              break;
+
+            case Server.Events.LEAVED:
+              {
+              }
+              break;
+
+            case Server.Events.MESSAGE:
+              {
+              }
+              break;
           }
         } catch (e) {
           logger.error(e);
@@ -87,13 +132,19 @@ const connect = async (token: string, user: User) => {
   });
 };
 
-const buildError = (err: Error, cmd?: Client.Message): Client.ErrorResponse => {
-  return {
-    command: cmd?.name,
-    success: false,
-    error: {
-      message: err.message,
-      object: err,
-    },
-  };
-};
+(async () => {
+  await makeDbConnection();
+  const user = await Database.getRepository(User).findOneBy({ id: payload.userId });
+  if (!user) {
+    logger.error('Selected user with id#' + payload.userId + 'was not found');
+    process.exit(1);
+  }
+
+  const res = await http.auth({ login: user.login, password: PASSWORD });
+  if (!res.success) {
+    logger.error(`User#${user.id} couldn't authorize`, res.error.message);
+    process.exit(1);
+  }
+
+  connect(res.response, user);
+})();
