@@ -9,7 +9,7 @@ import { ChatTypes } from '../types/chat';
 import { UserTypes } from '../types/user';
 
 export class HttpAPI {
-  constructor() {}
+  constructor(private token?: string) {}
 
   async auth(credentials: UserTypes.Credentials) {
     return (await this.request('POST', '/users/auth', credentials)) as IHttpSuccessResponse<string> | IHttpErrorResponse;
@@ -38,6 +38,9 @@ export class HttpAPI {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(body),
       };
+      if (this.token) {
+        options.headers[Config.TOKEN_HEADER_KEY] = this.token;
+      }
     }
 
     return new Promise((res, rej) => {

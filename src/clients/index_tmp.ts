@@ -2,13 +2,9 @@ import { Worker } from 'worker_threads';
 import Database, { makeDbConnection } from '../common/db';
 import { User, UserDto } from '../models/user';
 import { UserTypes } from '../types/user';
+import { ThreadData } from './client';
 import { HttpAPI } from './http-api';
 import { getRegistrationData } from './templates';
-
-export type ThreadData = {
-  userId: number;
-  createChat: boolean;
-};
 
 type UserId = number;
 
@@ -41,10 +37,10 @@ const http = new HttpAPI();
 
   await createUsers();
 
-  const users = await Database.getRepository(User).find();
+  const users = await Database.getRepository(User).find({ take: MAX_CLIENTS });
 
   for (const [idx, user] of users.entries()) {
-    const client = new Worker('./worker.js', {
+    const client = new Worker('./src/clients/worker.js', {
       workerData: {
         userId: user.id,
         createChat: idx % 4 === 0,
